@@ -1,0 +1,40 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: ./.docker/Dockerfile
+        command: ['php', 'artisan', 'serve' , '--host=0.0.0.0', '--port=80']
+        env_file:
+            - .env
+        networks:
+            - backend
+        volumes:
+            - /app
+        depends_on:
+            - db
+        ports:
+            - 8000:80
+    db:
+        image: mysql:latest
+        tty: true
+        ports:
+            - 3003:3306
+        env_file:
+            - .env
+        environment:
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-password}
+            - MYSQL_DATABASE=${DB_DATABASE:-blog_app}
+        networks:
+            - backend
+        volumes:
+            - mysql-data:/var/lib/mysql
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            timeout: 20s
+            retries: 10
+volumes:
+    mysql-data:
+        driver: local
+networks:
+    backend:
+        driver: bridge
